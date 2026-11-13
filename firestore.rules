@@ -1,0 +1,59 @@
+rules_version = '2';
+
+// Kava Eratap security rules. Paste into Firebase console → Firestore → Rules.
+// - Everyone using the app can see nakamal and their kava status.
+// - Only a nakamal's owner can change it (or claim one nobody owns yet).
+// - Orders are visible only to the customer who placed them and the nakamal they went to.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function uid() { return request.auth.uid; }
+    function changedKeys() { return request.resource.data.diff(resource.data).affectedKeys(); }
+
+    match /bars/{barId} {
+      allow read: if signedIn();
+
+      allow create: if signedIn()
+        && request.resource.data.ownerId == uid()
+        && request.resource.data.name is string
+        && request.resource.data.name.size() <= 50;
+
+      allow update: if signedIn() && (
+        // owner edits their own nakamal, and can't hand it to someone else
+        (resource.data.ownerId == uid() && request.resource.data.ownerId == uid())
+        // or claims a nakamal nobody owns yet
+        || (resource.data.ownerId == '' && request.resource.data.ownerId == uid()
+            && changedKeys().hasOnly(['ownerId']))
+      );
+
+      allow delete: if signedIn() && resource.data.ownerId == uid();
+    }
+
+    match /orders/{orderId} {
+      allow read: if signedIn()
+        && (resource.data.customerId == uid() || resource.data.ownerId == uid());
+
+      allow create: if signedIn()
+        && request.resource.data.customerId == uid()
+        && request.resource.data.status == 'new'
+        && request.resource.data.ownerId != ''
+        && request.resource.data.ownerId ==
+           get(/databases/$(database)/documents/bars/$(request.resource.data.barId)).data.ownerId;
+
+      allow update: if signedIn()
+        && changedKeys().hasOnly(['status', 'cancelledBy', 'updatedAt'])
+        && (
+          // the nakamal moves the order along
+          (resource.data.ownerId == uid()
+            && request.resource.data.status in ['accepted', 'on_the_way', 'delivered', 'cancelled'])
+          // the customer can cancel only before it's accepted
+          || (resource.data.customerId == uid()
+            && resource.data.status == 'new'
+            && request.resource.data.status == 'cancelled')
+        );
+
+      allow delete: if false;
+    }
+  }
+}

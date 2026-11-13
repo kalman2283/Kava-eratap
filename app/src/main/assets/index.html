@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kava Eratap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5efe3; --card:#fffcf6; --ink:#2a2117; --muted:#7a6e5e; --line:#e7dcc8;
+  --kava:#6b5636; --kava-d:#4a3b24; --leaf:#2f6b4f; --sea:#9fd0d3;
+  --ok:#2e8b57; --low:#d99a00; --fin:#c8412e; --closed:#8a8378;
+  --r:16px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 "DM Sans",system-ui,sans-serif}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+a{color:var(--leaf);font-weight:700}
+input,textarea{font:inherit;color:inherit}
+h1,h2,h3{font-family:"Bricolage Grotesque",system-ui,sans-serif;margin:0;letter-spacing:-.01em}
+#app{max-width:480px;margin:0 auto;min-height:100vh;padding-bottom:84px;position:relative}
+
+/* header */
+header{position:sticky;top:0;z-index:20;background:var(--kava-d);color:#f7efdf;padding:14px 16px 12px;border-radius:0 0 22px 22px;box-shadow:0 6px 18px rgba(42,33,23,.18)}
+.brand{display:flex;align-items:center;gap:10px}
+.brand svg{flex:none}
+.brand h1{font-size:22px;font-weight:800;line-height:1}
+.brand small{display:block;font-size:12px;opacity:.75;margin-top:3px;font-family:"DM Sans"}
+.mode{margin-left:auto;font-size:11px;padding:3px 8px;border-radius:99px;background:rgba(255,255,255,.12)}
+.seg{display:flex;background:rgba(0,0,0,.25);border-radius:12px;padding:3px;margin-top:12px}
+.seg button{flex:1;padding:8px 6px;border-radius:9px;font-weight:700;font-size:14px;color:#e9dcc4}
+.seg button.on{background:#f7efdf;color:var(--kava-d)}
+
+main{padding:14px 14px 0}
+.banner{background:#fff4d6;border:1px solid #f0dca0;color:#6b5000;border-radius:12px;padding:10px 12px;font-size:13px;margin-bottom:12px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;margin-bottom:12px}
+.chip{white-space:nowrap;padding:7px 13px;border-radius:99px;border:1.5px solid var(--line);background:var(--card);font-weight:500;font-size:13px}
+.chip.on{background:var(--kava);border-color:var(--kava);color:#fff}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:12px}
+.mapcard{padding:0;overflow:hidden}
+.mapcard .maphead{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;font-size:13px;color:var(--muted);border-top:1px solid var(--line)}
+.map{display:block;width:100%;height:auto;touch-action:manipulation}
+.legend{display:flex;gap:10px;flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:4px;font-size:12px}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
+
+.bar{display:flex;gap:12px;align-items:flex-start;text-align:left;width:100%}
+.bar .ico{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;flex:none;color:#fff;font-weight:800;font-family:"Bricolage Grotesque"}
+.bar .body{flex:1;min-width:0}
+.bar h3{font-size:17px;font-weight:600}
+.meta{font-size:13px;color:var(--muted)}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;padding:3px 9px;border-radius:99px;margin:5px 0 3px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.price{font-weight:700;font-size:14px;white-space:nowrap}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border-radius:12px;font-weight:700;background:var(--kava);color:#fff;min-height:46px}
+.btn.block{width:100%}
+.btn.ghost{background:transparent;border:1.5px solid var(--line);color:var(--ink)}
+.btn.green{background:var(--leaf)}
+.btn.red{background:var(--fin)}
+.btn.small{min-height:36px;padding:7px 12px;font-size:13.5px;border-radius:10px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* owner status buttons */
+.statusgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sbtn{border-radius:14px;padding:14px 12px;text-align:left;border:2px solid transparent;background:#f1e9da;min-height:86px}
+.sbtn b{display:block;font-size:15.5px;font-family:"Bricolage Grotesque";font-weight:800}
+.sbtn span{font-size:12.5px;color:var(--muted)}
+.sbtn.on{color:#fff}
+.sbtn.on span{color:rgba(255,255,255,.85)}
+.big-status{border-radius:var(--r);padding:16px;color:#fff;margin-bottom:12px}
+.big-status h2{font-size:24px;font-weight:800}
+.big-status p{margin:2px 0 0;opacity:.92;font-size:13.5px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+.stat b{display:block;font-family:"Bricolage Grotesque";font-size:22px;font-weight:800}
+.stat span{font-size:12.5px;color:var(--muted)}
+
+/* orders */
+.order h3{font-size:16px}
+.items{margin:8px 0;padding:0;list-style:none;font-size:14px}
+.items li{display:flex;justify-content:space-between;padding:2px 0}
+.total{display:flex;justify-content:space-between;font-weight:800;border-top:1px dashed var(--line);padding-top:8px;margin-top:4px}
+.track{display:flex;gap:4px;margin:10px 0 4px}
+.track div{flex:1;height:6px;border-radius:9px;background:#eadfcb}
+.track div.on{background:var(--leaf)}
+.tracklbl{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+.actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.actions .btn{flex:1}
+.tag{font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:99px;background:#eee4d2;color:var(--kava-d)}
+.tag.new{background:#ffe7b3;color:#7a5200}
+.tag.done{background:#d9ecdf;color:#1f5b3a}
+.tag.cx{background:#f6d6d0;color:#8a2a1c}
+.section-title{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 2px 8px}
+.empty{text-align:center;color:var(--muted);padding:28px 16px}
+.empty h3{color:var(--ink);font-size:18px;margin-bottom:4px}
+
+/* nav */
+nav{position:fixed;bottom:0;left:0;right:0;z-index:20;display:flex;justify-content:center;background:var(--card);border-top:1px solid var(--line);padding:6px 10px 10px}
+nav .in{display:flex;max-width:480px;width:100%;gap:6px}
+nav button{flex:1;padding:8px 4px;border-radius:12px;font-weight:700;font-size:13px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px;position:relative}
+nav button.on{color:var(--kava-d);background:#f1e9da}
+nav .badge{position:absolute;top:2px;right:calc(50% - 26px);background:var(--fin);color:#fff;border-radius:99px;font-size:11px;min-width:18px;height:18px;line-height:18px;padding:0 5px}
+
+/* sheet */
+#scrim{position:fixed;inset:0;background:rgba(30,22,12,.45);z-index:40;opacity:0;pointer-events:none;transition:opacity .2s}
+#scrim.show{opacity:1;pointer-events:auto}
+#sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;max-width:480px;margin:0 auto;background:var(--bg);border-radius:22px 22px 0 0;max-height:92vh;overflow-y:auto;transform:translateY(105%);transition:transform .25s ease;padding:8px 16px 24px}
+#sheet.show{transform:none}
+.grab{width:42px;height:5px;border-radius:9px;background:#d6c9b2;margin:4px auto 10px}
+.sheethead{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px}
+.sheethead h2{font-size:22px;flex:1}
+.x{width:36px;height:36px;border-radius:50%;background:#ebe1cf;font-size:18px;flex:none}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:13px;font-weight:700;margin-bottom:5px}
+.field input,.field textarea{width:100%;padding:11px 12px;border-radius:12px;border:1.5px solid var(--line);background:#fff;outline:none}
+.field input:focus,.field textarea:focus{border-color:var(--kava)}
+.field .hint{font-size:12px;color:var(--muted);margin-top:4px}
+.menuitem{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.menuitem:last-child{border-bottom:0}
+.menuitem .nm{flex:1}
+.menuitem .nm b{display:block;font-weight:600}
+.step{display:flex;align-items:center;gap:6px}
+.step button{width:36px;height:36px;border-radius:10px;background:#ebe1cf;font-size:20px;font-weight:700;line-height:1}
+.step output{min-width:22px;text-align:center;font-weight:800}
+.editrow{display:flex;gap:8px;margin-bottom:8px}
+.editrow input{padding:10px;border-radius:10px;border:1.5px solid var(--line);background:#fff;min-width:0}
+.editrow .n{flex:1}
+.editrow .p{width:96px}
+.toggle{display:flex;align-items:center;justify-content:space-between;padding:12px;border-radius:12px;background:#fff;border:1.5px solid var(--line);margin-bottom:12px}
+.toggle input{width:22px;height:22px;accent-color:var(--leaf)}
+.note{font-size:13px;color:var(--muted)}
+.paycash{display:flex;gap:10px;align-items:center;background:#e6f0e3;border-radius:12px;padding:10px 12px;font-size:13.5px;color:#1f4d33;margin:10px 0}
+
+#toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:11px 16px;border-radius:12px;font-size:14px;z-index:60;opacity:0;pointer-events:none;transition:.2s;max-width:88vw;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%)}
+.skeleton{height:84px;border-radius:var(--r);background:linear-gradient(90deg,#efe6d6,#f8f2e8,#efe6d6);background-size:200% 100%;animation:sh 1.2s infinite;margin-bottom:12px}
+@keyframes sh{to{background-position:-200% 0}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="brand">
+      <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="17" fill="#f7efdf"/><path d="M7 15h20c0 6-4.5 10-10 10S7 21 7 15z" fill="#8b6d3f"/><path d="M8.5 15h17" stroke="#4a3b24" stroke-width="2" stroke-linecap="round"/><path d="M14 9c1-1.5 0-3 1-4.5M19 9c1-1.5 0-3 1-4.5" stroke="#8b6d3f" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+      <div><h1>Kava Eratap</h1><small>Nakamal blong Eratap vilej</small></div>
+      <span class="mode" id="mode"></span>
+    </div>
+    <div class="seg" role="tablist">
+      <button data-act="role" data-v="customer" id="r-customer">🙋 Kastoma</button>
+      <button data-act="role" data-v="owner" id="r-owner">🏠 Ona blong nakamal</button>
+    </div>
+  </header>
+  <main id="view"></main>
+</div>
+<nav><div class="in" id="tabs"></div></nav>
+<div id="scrim" data-act="close-sheet"></div>
+<div id="sheet" role="dialog" aria-modal="true"></div>
+<div id="toast"></div>
+
+<script src="firebase-config.js"></script>
+<script>
+const STATUS = {
+  available:{bi:'Kava i stap',        en:'Kava available',      color:'#2e8b57', short:'Available'},
+  low:      {bi:'Kava i klosap finis', en:'Nearly finished',     color:'#d99a00', short:'Nearly finished'},
+  finished: {bi:'Kava i finis',        en:'Finished for today',  color:'#c8412e', short:'Finished'},
+  closed:   {bi:'Nakamal i klos',      en:'Closed right now',    color:'#8a8378', short:'Closed'}
+};
+const STATUS_ORDER = {available:0, low:1, finished:2, closed:3};
+const STEPS = ['new','accepted','on_the_way','delivered'];
+const OLBL = {new:'Sent', accepted:'Accepted', on_the_way:'On the way', delivered:'Delivered', cancelled:'Cancelled'};
+const DEFAULT_MENU = [{name:'Kava bottle 500ml', price:200},{name:'Kava bottle 1L', price:400}];
+
+const S = {role:'customer', ctab:'bars', otab:'status', filter:'all', bars:[], orders:[], myId:null,
+           fs:null, unsubs:[], oCust:[], oOwn:[], authError:false, fbError:false, mode:'loading', loaded:false, stale:false, ownerBarId:null,
+           sheet:null, cart:{}, pick:null, editMenu:[], confirmDel:false};
+
+const $ = s => document.querySelector(s);
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const vt = n => Math.round(Number(n) || 0).toLocaleString('en-US') + ' VT';
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const isToday = t => t && new Date(t).toDateString() === new Date().toDateString();
+const st = b => STATUS[b && b.status] || STATUS.closed;
+function ago(t){
+  if(!t) return 'not updated yet';
+  const s = Math.max(0, (Date.now() - t) / 1000);
+  if(s < 60) return 'just now';
+  const m = s / 60; if(m < 60) return Math.floor(m) + ' min ago';
+  const h = m / 60; if(h < 24) return Math.floor(h) + ' hr ago';
+  return Math.floor(h / 24) + ' days ago';
+}
+function store(k, v){
+  try{
+    if(v === undefined){ const x = localStorage.getItem('kava_' + k); return x ? JSON.parse(x) : null; }
+    localStorage.setItem('kava_' + k, JSON.stringify(v));
+  }catch(e){ return null; }
+}
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 3200); }
+const newId = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+/* ---------- data layer (Firebase Firestore, or on-phone demo mode) ---------- */
+// Firestore saves on the phone first and sends when there is internet, so we
+// don't wait for the server: the screen updates straight away.
+function write(live, local){
+  if(S.mode !== 'live'){ local(); render(); return true; }
+  try{
+    live().catch(e => {
+      toast(e && e.code === 'permission-denied'
+        ? "Not allowed: you can only change your own nakamal and orders."
+        : 'Could not save: ' + ((e && e.message) || 'unknown error'));
+    });
+  }catch(e){ toast('Could not save. Try again.'); return false; }
+  if(!navigator.onLine) setTimeout(() => toast('Saved on this phone. It will send when internet comes back.'), 3300);
+  return true;
+}
+const api = {
+  setBar: (id, d) => write(() => S.fs.doc('bars/' + id).set(d),
+    () => { const v = {id, ...d}; const i = S.bars.findIndex(b => b.id === id); i < 0 ? S.bars.push(v) : S.bars[i] = v; }),
+  updateBar: (id, p) => write(() => S.fs.doc('bars/' + id).update(p),
+    () => { S.bars = S.bars.map(b => b.id === id ? {...b, ...p} : b); }),
+  deleteBar: id => write(() => S.fs.doc('bars/' + id).delete(),
+    () => { S.bars = S.bars.filter(b => b.id !== id); }),
+  addOrder: d => { const id = newId('o'); return write(() => S.fs.doc('orders/' + id).set(d), () => { S.orders.unshift({id, ...d}); }); },
+  updateOrder: (id, p) => write(() => S.fs.doc('orders/' + id).update(p),
+    () => { S.orders = S.orders.map(o => o.id === id ? {...o, ...p} : o); })
+};
+
+function startLocal(){
+  S.mode = 'local'; S.loaded = true;
+  const now = Date.now();
+  S.bars = [
+    {id:'demo-seaside', name:'Demo Nakamal – Seaside', landmark:'Down by the beach, past the big mango tree', phone:'', hours:'4pm – late', x:62, y:40, status:'available', statusNote:'Fresh kava tonight', menu:DEFAULT_MENU, deliveryFee:100, delivers:true, ownerId:'', updatedAt:now - 6*60000},
+    {id:'demo-roadside', name:'Demo Nakamal – Roadside', landmark:'Main road, opposite the bus stop', phone:'', hours:'5pm – 11pm', x:30, y:23, status:'low', statusNote:'', menu:DEFAULT_MENU, deliveryFee:100, delivers:true, ownerId:'', updatedAt:now - 25*60000},
+    {id:'demo-topside', name:'Demo Nakamal – Top Side', landmark:'Up the hill behind the church', phone:'', hours:'4pm – 10pm', x:80, y:14, status:'finished', statusNote:'New batch tomorrow', menu:DEFAULT_MENU, deliveryFee:150, delivers:false, ownerId:'', updatedAt:now - 70*60000}
+  ];
+  render();
+}
+
+const FIREBASE_VERSION = '10.12.2';
+function loadScript(src){
+  return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+}
+async function ensureFirebase(){
+  // Bundled copy first (works with no internet), then Google's CDN.
+  for(const f of ['app', 'auth', 'firestore']){
+    const file = 'firebase-' + f + '-compat.js';
+    try{ await loadScript('vendor/' + file); }
+    catch(e){ await loadScript('https://www.gstatic.com/firebasejs/' + FIREBASE_VERSION + '/' + file); }
+  }
+}
+
+function startFirebase(cfg){
+  firebase.initializeApp(cfg);
+  const fs = firebase.firestore();
+  fs.enablePersistence().catch(() => {});   // keep data on the phone for offline use
+  S.fs = fs; S.mode = 'live';
+  const timer = setTimeout(() => { if(!S.loaded || S.stale !== false){ S.loaded = true; S.stale = true; render(); } }, 10000);
+  firebase.auth().onAuthStateChanged(u => {
+    if(!u){
+      firebase.auth().signInAnonymously().catch(() => { clearTimeout(timer); S.loaded = true; S.authError = true; render(); });
+      return;
+    }
+    S.authError = false;
+    if(S.myId === u.uid) return;
+    S.myId = u.uid;
+    subscribeFs(timer);
+  });
+}
+
+function subscribeFs(timer){
+  S.unsubs.forEach(f => f()); S.unsubs = [];
+  S.unsubs.push(S.fs.collection('bars').onSnapshot({includeMetadataChanges:true}, snap => {
+    S.bars = snap.docs.map(d => ({id:d.id, ...d.data()}));
+    if(!snap.metadata.fromCache){ clearTimeout(timer); S.stale = false; }
+    S.loaded = true; render(); refreshSheet();
+  }, () => { clearTimeout(timer); S.loaded = true; S.stale = true; render(); }));
+  // Each person only receives orders they placed, or orders sent to their nakamal.
+  const merge = () => {
+    const m = new Map(); [...S.oCust, ...S.oOwn].forEach(o => m.set(o.id, o));
+    S.orders = [...m.values()].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    render();
+  };
+  S.unsubs.push(S.fs.collection('orders').where('customerId', '==', S.myId)
+    .onSnapshot(s => { S.oCust = s.docs.map(d => ({id:d.id, ...d.data()})); merge(); }, () => {}));
+  S.unsubs.push(S.fs.collection('orders').where('ownerId', '==', S.myId)
+    .onSnapshot(s => { S.oOwn = s.docs.map(d => ({id:d.id, ...d.data()})); merge(); }, () => {}));
+}
+
+async function init(){
+  S.role = store('role') === 'owner' ? 'owner' : 'customer';
+  render();
+  const cfg = window.FIREBASE_CONFIG;
+  if(cfg && cfg.apiKey){
+    try{ await ensureFirebase(); startFirebase(cfg); return; }
+    catch(e){ S.fbError = true; }
+  }
+  S.myId = store('uid') || newId('local-'); store('uid', S.myId);
+  startLocal();
+}
+
+// Android back button: close a panel, then go back to the first tab, then exit.
+window.kavaBack = function(){
+  if(S.sheet){ closeSheet(); return true; }
+  if(S.role === 'customer' && S.ctab !== 'bars'){ S.ctab = 'bars'; render(); return true; }
+  if(S.role === 'owner' && S.otab !== 'status'){ S.otab = 'status'; render(); return true; }
+  return false;
+};
+window.addEventListener('online', () => render());
+window.addEventListener('offline', () => render());
+
+/* ---------- map ---------- */
+function mapSVG(bars, opt = {}){
+  const pins = bars.map(b => {
+    const c = st(b).color, x = +b.x || 50, y = +b.y || 30;
+    const nm = esc(((b.name || '').replace(/^(demo\s+)?nakamal\s*[–-]?\s*/i, '') || b.name || '').slice(0, 16));
+    return `<g data-act="open-bar" data-id="${esc(b.id)}" style="cursor:pointer">
+      <circle cx="${x}" cy="${y}" r="4.6" fill="${c}" opacity=".22"/>
+      <circle cx="${x}" cy="${y}" r="2.7" fill="${c}" stroke="#fff" stroke-width=".8"/>
+      <text x="${x}" y="${y + 6.4}" text-anchor="middle" font-size="2.6" font-weight="700" fill="#2a2117" stroke="#fffcf6" stroke-width=".9" paint-order="stroke">${nm}</text></g>`;
+  }).join('');
+  const pick = opt.pick ? `<g pointer-events="none"><circle cx="${opt.pick.x}" cy="${opt.pick.y}" r="5" fill="#6b5636" opacity=".2"/><path d="M${opt.pick.x} ${opt.pick.y}l-2.6-5.2a2.9 2.9 0 1 1 5.2 0z" fill="#6b5636" stroke="#fff" stroke-width=".6"/></g>` : '';
+  return `<svg class="map" viewBox="0 0 100 62" ${opt.picker ? 'data-act="pick" style="cursor:crosshair"' : ''} role="img" aria-label="Map of Eratap village">
+    <rect width="100" height="62" fill="#d6e4bd"/>
+    <path d="M0 0h100v12C80 9 70 15 55 11S20 6 0 10z" fill="#c7d9a8"/>
+    <g fill="#b9cf94">${[[8,32],[14,36],[44,30],[50,34],[72,29],[88,34],[20,14],[60,8],[92,8],[38,12]].map(([a,b])=>`<circle cx="${a}" cy="${b}" r="2"/>`).join('')}</g>
+    <path d="M0 45C14 41 24 49 40 46S64 38 78 44S94 51 100 48V62H0z" fill="#efe1b8"/>
+    <path d="M0 47.5C14 43.5 24 51.5 40 48.5S64 40.5 78 46.5S94 53.5 100 50.5V62H0z" fill="${'#9fd0d3'}"/>
+    <path d="M0 52C18 49 30 55 48 52S78 50 100 55" stroke="#c6e6e8" stroke-width=".5" fill="none"/>
+    <path d="M0 22C18 26 34 18 52 22S84 30 100 24" stroke="#bfae86" stroke-width="4" fill="none"/>
+    <path d="M0 22C18 26 34 18 52 22S84 30 100 24" stroke="#f6eed8" stroke-width="3" fill="none"/>
+    <path d="M58 23.5C60 30 61 36 63 44" stroke="#f6eed8" stroke-width="1.6" fill="none" stroke-dasharray="1.5 1"/>
+    <path d="M70 26C74 20 78 16 82 12" stroke="#f6eed8" stroke-width="1.6" fill="none" stroke-dasharray="1.5 1"/>
+    <text x="2" y="18.5" font-size="2.6" fill="#5c5040" font-weight="700">← Port Vila</text>
+    <text x="38" y="18.2" font-size="2.3" fill="#7a6e5e">Main road</text>
+    <text x="46" y="58" font-size="2.6" fill="#3d7f86" font-style="italic">Solwota (sea)</text>
+    ${pins}${pick}
+  </svg>`;
+}
+
+/* ---------- render ---------- */
+function render(){
+  $('#r-customer').classList.toggle('on', S.role === 'customer');
+  $('#r-owner').classList.toggle('on', S.role === 'owner');
+  $('#mode').textContent = S.mode === 'live' ? (navigator.onLine ? '● Live' : '○ Offline') : S.mode === 'local' ? 'Demo' : '…';
+  $('#view').innerHTML = S.role === 'customer' ? customerView() : ownerView();
+  $('#tabs').innerHTML = tabsHTML();
+}
+
+function banners(){
+  let h = '';
+  if(S.mode === 'local') h += `<div class="banner">${S.fbError
+    ? 'No internet, so the app could not connect. Showing demo nakamal. Connect to the internet and reopen the app.'
+    : 'Demo mode: this app is not connected to the shared database yet, so changes stay on this phone.'}</div>`;
+  if(S.mode === 'live' && S.authError) h += `<div class="banner">Could not sign in. Check the internet connection and reopen the app.</div>`;
+  if(S.mode === 'live' && !navigator.onLine) h += `<div class="banner">No internet. You're seeing the last saved status. New updates will send when you're back online.</div>`;
+  else if(S.stale) h += `<div class="banner">Can't reach the latest updates yet. Status shown may be old.</div>`;
+  return h;
+}
+
+function tabsHTML(){
+  const mine = S.orders.filter(o => o.customerId === S.myId && ['new','accepted','on_the_way'].includes(o.status)).length;
+  const myBarIds = myBars().map(b => b.id);
+  const incoming = S.orders.filter(o => myBarIds.includes(o.barId) && o.status === 'new').length;
+  const t = (act, v, cur, icon, label, badge) =>
+    `<button data-act="${act}" data-v="${v}" class="${cur === v ? 'on' : ''}"><span style="font-size:19px">${icon}</span>${label}${badge ? `<span class="badge">${badge}</span>` : ''}</button>`;
+  return S.role === 'customer'
+    ? t('ctab','bars',S.ctab,'🥥','Nakamal') + t('ctab','orders',S.ctab,'🛵','My orders',mine)
+    : t('otab','status',S.otab,'📣','My nakamal') + t('otab','orders',S.otab,'🧾','Orders',incoming);
+}
+
+function sortedBars(){
+  return [...S.bars].sort((a, b) => (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9) || (a.name || '').localeCompare(b.name || ''));
+}
+
+/* customer */
+function customerView(){
+  if(!S.loaded) return '<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>';
+  if(S.ctab === 'orders') return banners() + myOrdersView();
+  let bars = sortedBars();
+  if(S.filter === 'open') bars = bars.filter(b => b.status === 'available' || b.status === 'low');
+  if(S.filter === 'deliver') bars = bars.filter(b => b.delivers && (b.status === 'available' || b.status === 'low'));
+  const openCount = S.bars.filter(b => b.status === 'available' || b.status === 'low').length;
+  const chip = (v, l) => `<button class="chip ${S.filter === v ? 'on' : ''}" data-act="filter" data-v="${v}">${l}</button>`;
+  let h = banners();
+  h += `<div class="card mapcard">${mapSVG(bars)}
+    <div class="maphead"><div class="legend">${['available','low','finished','closed'].map(k => `<span><i class="dot" style="background:${STATUS[k].color}"></i>${STATUS[k].short}</span>`).join('')}</div></div></div>`;
+  h += `<div class="chips">${chip('all', `All (${S.bars.length})`)}${chip('open', `Kava i stap (${openCount})`)}${chip('deliver', '🛵 Delivers now')}</div>`;
+  if(!S.bars.length) return h + `<div class="card empty"><h3>No nakamal yet</h3>Bar owners can add their nakamal from the <b>Ona blong nakamal</b> tab.</div>`;
+  if(!bars.length) return h + `<div class="card empty"><h3>Nothing here right now</h3>No nakamal matches this filter. Try “All”.</div>`;
+  return h + bars.map(barCard).join('');
+}
+
+function barCard(b){
+  const s = st(b);
+  const prices = (b.menu || []).map(m => +m.price).filter(n => n > 0);
+  const from = prices.length ? 'from ' + vt(Math.min(...prices)) : '';
+  const old = b.updatedAt && Date.now() - b.updatedAt > 12 * 3600e3;
+  return `<button class="card bar" data-act="open-bar" data-id="${esc(b.id)}">
+    <div class="ico" style="background:${s.color}">${esc((b.name || '?').replace(/^(demo\s+)?nakamal\s*[–-]?\s*/i, '').charAt(0).toUpperCase() || 'N')}</div>
+    <div class="body">
+      <div class="row"><h3>${esc(b.name)}</h3><span class="price">${from}</span></div>
+      <span class="pill" style="background:${s.color}1f;color:${s.color}"><i class="dot" style="background:${s.color}"></i>${s.bi}</span>
+      <div class="meta">${old ? '⚠️ Status may be old · ' : ''}Updated ${ago(b.updatedAt)}${b.delivers ? ' · 🛵 Delivers' : ''}</div>
+      ${b.statusNote ? `<div class="meta" style="color:var(--ink)">“${esc(b.statusNote)}”</div>` : ''}
+      ${b.landmark ? `<div class="meta">📍 ${esc(b.landmark)}</div>` : ''}
+    </div></button>`;
+}
+
+function trackHTML(o){
+  if(o.status === 'cancelled') return `<div class="meta" style="margin-top:8px;color:var(--fin)">Cancelled${o.cancelledBy === 'bar' ? ' by the nakamal' : ''}.</div>`;
+  const i = STEPS.indexOf(o.status);
+  return `<div class="track">${STEPS.map((s, j) => `<div class="${j <= i ? 'on' : ''}"></div>`).join('')}</div>
+    <div class="tracklbl">${STEPS.map(s => `<span>${OLBL[s]}</span>`).join('')}</div>`;
+}
+function itemsHTML(o){
+  return `<ul class="items">${(o.items || []).map(it => `<li><span>${+it.qty}× ${esc(it.name)}</span><span>${vt(it.price * it.qty)}</span></li>`).join('')}
+    ${o.deliveryFee ? `<li><span>Delivery</span><span>${vt(o.deliveryFee)}</span></li>` : ''}</ul>
+    <div class="total"><span>Pay cash on delivery</span><span>${vt(o.total)}</span></div>`;
+}
+function tagHTML(o){
+  const cls = o.status === 'new' ? 'new' : o.status === 'delivered' ? 'done' : o.status === 'cancelled' ? 'cx' : '';
+  return `<span class="tag ${cls}">${OLBL[o.status] || o.status}</span>`;
+}
+
+function myOrdersView(){
+  const mine = S.orders.filter(o => o.customerId === S.myId);
+  if(!mine.length) return `<div class="card empty"><h3>No orders yet</h3>Pick a nakamal with kava and order a bottle. You pay cash when it arrives.</div>`;
+  const active = mine.filter(o => ['new','accepted','on_the_way'].includes(o.status));
+  const past = mine.filter(o => !active.includes(o)).slice(0, 15);
+  const card = o => `<div class="card order">
+      <div class="row"><h3>${esc(o.barName)}</h3>${tagHTML(o)}</div>
+      <div class="meta">${ago(o.createdAt)} · to ${esc(o.deliverTo)}</div>
+      ${trackHTML(o)}${itemsHTML(o)}
+      ${o.status === 'new' ? `<div class="actions"><button class="btn ghost small" data-act="cancel-order" data-id="${esc(o.id)}">Cancel order</button></div>` : ''}
+    </div>`;
+  return (active.length ? `<div class="section-title">Active</div>` + active.map(card).join('') : '')
+    + (past.length ? `<div class="section-title">Past orders</div>` + past.map(card).join('') : '');
+}
+
+/* owner */
+function myBars(){ return S.bars.filter(b => b.ownerId && b.ownerId === S.myId); }
+function ownerView(){
+  if(!S.loaded) return '<div class="skeleton"></div><div class="skeleton"></div>';
+  const mine = myBars();
+  let h = banners();
+  if(!mine.length){
+    const unclaimed = S.bars.filter(b => !b.ownerId);
+    h += `<div class="card empty"><h3>Register your nakamal</h3>Add your kava bar so customers in Eratap can see when kava is ready and order delivery.<br><br>
+      <button class="btn block" data-act="edit-bar" data-id="">＋ Add my nakamal</button></div>`;
+    if(unclaimed.length) h += `<div class="section-title">Or claim a listed nakamal</div>` + unclaimed.map(b => `<div class="card row"><div><b>${esc(b.name)}</b><div class="meta">${esc(b.landmark || '')}</div></div><button class="btn small" data-act="claim" data-id="${esc(b.id)}">This is mine</button></div>`).join('');
+    return h;
+  }
+  if(!mine.find(b => b.id === S.ownerBarId)) S.ownerBarId = mine[0].id;
+  const bar = mine.find(b => b.id === S.ownerBarId);
+  h += `<div class="chips">${mine.map(b => `<button class="chip ${b.id === bar.id ? 'on' : ''}" data-act="pick-owner-bar" data-id="${esc(b.id)}">${esc(b.name)}</button>`).join('')}<button class="chip" data-act="edit-bar" data-id="">＋ Add</button></div>`;
+  return h + (S.otab === 'orders' ? ownerOrders(bar) : ownerStatus(bar));
+}
+
+function ownerStatus(bar){
+  const s = st(bar);
+  const todays = S.orders.filter(o => o.barId === bar.id && isToday(o.createdAt));
+  const sales = todays.filter(o => o.status === 'delivered').reduce((a, o) => a + (+o.total || 0), 0);
+  const opts = [
+    ['available', 'Kava i stap', 'Kava is ready'],
+    ['low', 'Klosap finis', 'Nearly finished'],
+    ['finished', 'Kava i finis', 'All finished'],
+    ['closed', 'Nakamal i klos', 'Closed now']
+  ];
+  return `<div class="big-status" style="background:${s.color}">
+      <div class="meta" style="color:rgba(255,255,255,.85)">${esc(bar.name)} · customers see</div>
+      <h2>${s.bi}</h2><p>${s.en} · updated ${ago(bar.updatedAt)}${bar.statusNote ? ` · “${esc(bar.statusNote)}”` : ''}</p></div>
+    <div class="section-title" style="margin-top:6px">Tap to update kava status</div>
+    <div class="statusgrid">${opts.map(([k, bi, en]) => `<button class="sbtn ${bar.status === k ? 'on' : ''}" style="${bar.status === k ? `background:${STATUS[k].color};border-color:${STATUS[k].color}` : `border-color:${STATUS[k].color}55`}" data-act="set-status" data-v="${k}"><b>${bi}</b><span>${en}</span></button>`).join('')}</div>
+    <div class="section-title">Today</div>
+    <div class="stats"><div class="stat"><b>${todays.filter(o => o.status !== 'cancelled').length}</b><span>Orders today</span></div>
+      <div class="stat"><b>${vt(sales)}</b><span>Cash from deliveries</span></div></div>
+    <div class="card">
+      <div class="row"><div><b>Delivery</b><div class="meta">${bar.delivers ? `On · fee ${vt(bar.deliveryFee)}` : 'Off · walk-in only'}</div></div>
+      <button class="btn small ${bar.delivers ? 'ghost' : 'green'}" data-act="toggle-deliver">${bar.delivers ? 'Turn off' : 'Turn on'}</button></div>
+    </div>
+    <button class="btn block ghost" data-act="edit-bar" data-id="${esc(bar.id)}">✏️ Edit nakamal details, prices & map pin</button>`;
+}
+
+function ownerOrders(bar){
+  const list = S.orders.filter(o => o.barId === bar.id);
+  const active = list.filter(o => ['new','accepted','on_the_way'].includes(o.status));
+  const done = list.filter(o => !active.includes(o) && isToday(o.updatedAt || o.createdAt));
+  if(!list.length) return `<div class="card empty"><h3>No orders yet</h3>New orders appear here straight away. Keep your status up to date so customers know kava is ready.</div>`;
+  const card = o => {
+    let act = '';
+    if(o.status === 'new') act = `<button class="btn green" data-act="order" data-id="${esc(o.id)}" data-v="accepted">Accept</button><button class="btn ghost" data-act="order" data-id="${esc(o.id)}" data-v="cancelled">Decline</button>`;
+    else if(o.status === 'accepted') act = `<button class="btn" data-act="order" data-id="${esc(o.id)}" data-v="on_the_way">🛵 On the way</button><button class="btn ghost small" data-act="order" data-id="${esc(o.id)}" data-v="cancelled">Cancel</button>`;
+    else if(o.status === 'on_the_way') act = `<button class="btn green" data-act="order" data-id="${esc(o.id)}" data-v="delivered">✓ Delivered · got ${vt(o.total)} cash</button>`;
+    return `<div class="card order">
+      <div class="row"><h3>${esc(o.customerName || 'Customer')}</h3>${tagHTML(o)}</div>
+      <div class="meta">${ago(o.createdAt)}${o.customerPhone ? ` · 📞 <a href="tel:${esc(o.customerPhone.replace(/[^\d+]/g, ''))}">${esc(o.customerPhone)}</a>` : ''}</div>
+      <div style="margin-top:6px">📍 <b>${esc(o.deliverTo)}</b></div>
+      ${o.note ? `<div class="meta">Note: ${esc(o.note)}</div>` : ''}
+      ${itemsHTML(o)}${act ? `<div class="actions">${act}</div>` : ''}</div>`;
+  };
+  return (active.length ? `<div class="section-title" style="margin-top:4px">To do (${active.length})</div>` + active.map(card).join('') : `<div class="card empty" style="padding:18px">No orders waiting.</div>`)
+    + (done.length ? `<div class="section-title">Done today</div>` + done.map(card).join('') : '');
+}
+
+/* ---------- sheets ---------- */
+function openSheet(html, kind, id){
+  S.sheet = {kind, id};
+  const sh = $('#sheet');
+  sh.innerHTML = `<div class="grab"></div>` + html;
+  sh.scrollTop = 0;
+  sh.classList.add('show'); $('#scrim').classList.add('show');
+}
+function closeSheet(){ S.sheet = null; S.confirmDel = false; $('#sheet').classList.remove('show'); $('#scrim').classList.remove('show'); }
+
+function statusBlock(b){
+  const s = st(b);
+  return `<div class="big-status" style="background:${s.color};margin-bottom:10px"><h2>${s.bi}</h2><p>${s.en} · updated ${ago(b.updatedAt)}</p>${b.statusNote ? `<p>“${esc(b.statusNote)}”</p>` : ''}</div>`;
+}
+function canOrder(b){ return (b.status === 'available' || b.status === 'low') && b.delivers; }
+function orderBtnHTML(b){
+  if(b.status === 'finished') return `<button class="btn block" disabled>Kava i finis · can't order</button>`;
+  if(b.status === 'closed') return `<button class="btn block" disabled>Nakamal i klos · can't order</button>`;
+  if(!b.delivers) return `<button class="btn block" disabled>Walk-in only · no delivery now</button>`;
+  return `<button class="btn block green" data-act="place-order" id="placeBtn">Place order · <span id="btnTotal">${vt(cartTotal(b))}</span></button>`;
+}
+function cartTotal(b){
+  const sub = (b.menu || []).reduce((a, m, i) => a + (S.cart[i] || 0) * (+m.price || 0), 0);
+  return sub ? sub + (+b.deliveryFee || 0) : 0;
+}
+
+function openBar(id){
+  const b = S.bars.find(x => x.id === id); if(!b) return;
+  S.cart = {};
+  const saved = store('me') || {};
+  const menu = (b.menu || []).map((m, i) => `<div class="menuitem"><div class="nm"><b>${esc(m.name)}</b><span class="meta">${vt(m.price)}</span></div>
+      <div class="step"><button data-act="qty" data-i="${i}" data-d="-1" aria-label="Less">−</button><output id="q${i}">0</output><button data-act="qty" data-i="${i}" data-d="1" aria-label="More">+</button></div></div>`).join('');
+  openSheet(`
+    <div class="sheethead"><h2>${esc(b.name)}</h2><button class="x" data-act="close-sheet" aria-label="Close">✕</button></div>
+    <div id="sheetStatus">${statusBlock(b)}</div>
+    <div class="card">
+      ${b.landmark ? `<div>📍 ${esc(b.landmark)}</div>` : ''}
+      ${b.hours ? `<div class="meta">🕓 ${esc(b.hours)}</div>` : ''}
+      ${b.phone ? `<div class="meta">📞 <a href="tel:${esc(b.phone.replace(/[^\d+]/g, ''))}">${esc(b.phone)}</a></div>` : ''}
+      <div class="meta">${b.delivers ? `🛵 Delivers · fee ${vt(b.deliveryFee)}` : 'Walk-in only right now'}</div>
+    </div>
+    <div class="section-title" style="margin-top:4px">Order kava</div>
+    <div class="card" style="padding:4px 14px">${menu || '<div class="meta" style="padding:10px 0">No prices listed yet.</div>'}</div>
+    <div class="field"><label for="f-name">Your name</label><input id="f-name" value="${esc(saved.name || '')}" autocomplete="name"></div>
+    <div class="field"><label for="f-phone">Phone (so the driver can call)</label><input id="f-phone" type="tel" value="${esc(saved.phone || '')}" placeholder="e.g. 77 12345"></div>
+    <div class="field"><label for="f-where">Deliver to</label><input id="f-where" value="${esc(saved.where || '')}" placeholder="e.g. Blue house next to the school">
+      <div class="hint">Describe a landmark so they can find you.</div></div>
+    <div class="field"><label for="f-note">Note (optional)</label><input id="f-note" placeholder="e.g. Bring 2 shells"></div>
+    <div class="paycash">💵<div><b>Pay cash when it arrives.</b> No money now. Have <span id="cashTotal">${vt(cartTotal(b))}</span> ready.</div></div>
+    <div id="orderBtnWrap">${orderBtnHTML(b)}</div>
+    ${b.status === 'low' ? `<p class="note" style="text-align:center">Kava i klosap finis: order soon!</p>` : ''}
+  `, 'bar', id);
+}
+
+function refreshSheet(){
+  if(!S.sheet || S.sheet.kind !== 'bar') return;
+  const b = S.bars.find(x => x.id === S.sheet.id);
+  if(!b){ closeSheet(); return; }
+  const el = $('#sheetStatus'); if(el) el.innerHTML = statusBlock(b);
+  const w = $('#orderBtnWrap'); if(w) w.innerHTML = orderBtnHTML(b);
+}
+
+function openEdit(id){
+  const b = id ? S.bars.find(x => x.id === id) : null;
+  S.pick = b ? {x:+b.x || 50, y:+b.y || 30} : null;
+  S.editMenu = JSON.parse(JSON.stringify((b && b.menu && b.menu.length) ? b.menu : DEFAULT_MENU));
+  S.confirmDel = false;
+  openSheet(`
+    <div class="sheethead"><h2>${b ? 'Edit nakamal' : 'Add your nakamal'}</h2><button class="x" data-act="close-sheet" aria-label="Close">✕</button></div>
+    <div class="field"><label for="e-name">Nakamal name</label><input id="e-name" value="${esc(b ? b.name : '')}" placeholder="e.g. Nakamal blong Joe"></div>
+    <div class="field"><label>Map pin</label><div class="card mapcard" id="pickWrap" style="margin:0">${mapSVG([], {picker:true, pick:S.pick})}</div><div class="hint">Tap the map where your nakamal is.</div></div>
+    <div class="field"><label for="e-land">How to find it</label><input id="e-land" value="${esc(b ? b.landmark : '')}" placeholder="e.g. Opposite the bus stop"></div>
+    <div class="field"><label for="e-hours">Opening hours</label><input id="e-hours" value="${esc(b ? b.hours : '')}" placeholder="e.g. 4pm – late"></div>
+    <div class="field"><label for="e-phone">Phone</label><input id="e-phone" type="tel" value="${esc(b ? b.phone : '')}"></div>
+    <div class="field"><label for="e-note">Short message for customers</label><input id="e-note" value="${esc(b ? b.statusNote : '')}" maxlength="80" placeholder="e.g. Fresh batch at 6pm"></div>
+    <div class="field"><label>Prices (VT)</label><div id="menuEdit">${menuEditHTML()}</div>
+      <button class="btn small ghost" data-act="add-item">＋ Add item</button></div>
+    <label class="toggle"><span><b>Delivery</b><br><span class="note">Customers can order to their house</span></span><input type="checkbox" id="e-del" ${!b || b.delivers ? 'checked' : ''}></label>
+    <div class="field"><label for="e-fee">Delivery fee (VT)</label><input id="e-fee" type="number" inputmode="numeric" min="0" step="50" value="${b ? +b.deliveryFee || 0 : 100}"></div>
+    <button class="btn block" data-act="save-bar" data-id="${b ? esc(b.id) : ''}">${b ? 'Save changes' : 'Add nakamal'}</button>
+    ${b ? `<div style="height:10px"></div><button class="btn block ghost" style="color:var(--fin)" data-act="delete-bar" data-id="${esc(b.id)}" id="delBtn">Remove this nakamal</button>` : ''}
+  `, 'edit', id);
+}
+function menuEditHTML(){
+  return S.editMenu.map((m, i) => `<div class="editrow"><input class="n" data-mi="${i}" data-k="name" value="${esc(m.name)}" placeholder="Item"><input class="p" data-mi="${i}" data-k="price" type="number" inputmode="numeric" min="0" step="10" value="${+m.price || ''}" placeholder="VT"><button class="x" data-act="rm-item" data-i="${i}" aria-label="Remove">✕</button></div>`).join('');
+}
+
+/* ---------- actions ---------- */
+document.addEventListener('input', e => {
+  const mi = e.target.dataset && e.target.dataset.mi;
+  if(mi !== undefined){ const k = e.target.dataset.k; S.editMenu[+mi][k] = k === 'price' ? +e.target.value : e.target.value; }
+});
+
+document.addEventListener('click', async e => {
+  const el = e.target.closest('[data-act]'); if(!el) return;
+  const act = el.dataset.act, id = el.dataset.id, v = el.dataset.v;
+  switch(act){
+    case 'role': S.role = v; store('role', v); render(); window.scrollTo(0, 0); break;
+    case 'ctab': S.ctab = v; render(); window.scrollTo(0, 0); break;
+    case 'otab': S.otab = v; render(); window.scrollTo(0, 0); break;
+    case 'filter': S.filter = v; render(); break;
+    case 'open-bar': openBar(id); break;
+    case 'close-sheet': closeSheet(); break;
+    case 'pick-owner-bar': S.ownerBarId = id; render(); break;
+
+    case 'qty': {
+      const b = S.bars.find(x => x.id === S.sheet.id); if(!b) return;
+      const i = +el.dataset.i; S.cart[i] = Math.max(0, Math.min(50, (S.cart[i] || 0) + +el.dataset.d));
+      $('#q' + i).textContent = S.cart[i];
+      const t = vt(cartTotal(b)); const bt = $('#btnTotal'); if(bt) bt.textContent = t; $('#cashTotal').textContent = t;
+      break;
+    }
+    case 'place-order': {
+      const b = S.bars.find(x => x.id === S.sheet.id); if(!b) return;
+      if(!canOrder(b)){ refreshSheet(); return toast('This nakamal can’t take orders right now.'); }
+      if(S.mode === 'live' && !b.ownerId) return toast('This nakamal has no owner on the app yet, so it can’t take orders.');
+      const items = (b.menu || []).map((m, i) => ({name:m.name, price:+m.price || 0, qty:S.cart[i] || 0})).filter(x => x.qty > 0);
+      const name = $('#f-name').value.trim(), phone = $('#f-phone').value.trim(), where = $('#f-where').value.trim(), note = $('#f-note').value.trim();
+      if(!items.length) return toast('Add at least one item.');
+      if(!name) { $('#f-name').focus(); return toast('Please add your name.'); }
+      if(!where){ $('#f-where').focus(); return toast('Where should they bring it?'); }
+      store('me', {name, phone, where});
+      const sub = items.reduce((a, x) => a + x.price * x.qty, 0), fee = +b.deliveryFee || 0, now = Date.now();
+      el.disabled = true;
+      const ok = await api.addOrder({barId:b.id, barName:b.name, ownerId:b.ownerId || '', customerId:S.myId, customerName:name.slice(0, 60), customerPhone:phone.slice(0, 30),
+        deliverTo:where.slice(0, 140), note:note.slice(0, 140), items, subtotal:sub, deliveryFee:fee, total:sub + fee, status:'new', createdAt:now, updatedAt:now});
+      el.disabled = false;
+      if(ok){ closeSheet(); S.ctab = 'orders'; render(); window.scrollTo(0, 0); toast('Order sent! Pay ' + vt(sub + fee) + ' cash on delivery.'); }
+      break;
+    }
+    case 'cancel-order': await api.updateOrder(id, {status:'cancelled', cancelledBy:'customer', updatedAt:Date.now()}); break;
+
+    case 'set-status': {
+      const bar = S.bars.find(b => b.id === S.ownerBarId); if(!bar || bar.status === v) return;
+      if(await api.updateBar(bar.id, {status:v, updatedAt:Date.now()})) toast('Customers now see: ' + STATUS[v].bi);
+      break;
+    }
+    case 'toggle-deliver': {
+      const bar = S.bars.find(b => b.id === S.ownerBarId); if(!bar) return;
+      await api.updateBar(bar.id, {delivers:!bar.delivers});
+      break;
+    }
+    case 'order': {
+      const patch = {status:v, updatedAt:Date.now()}; if(v === 'cancelled') patch.cancelledBy = 'bar';
+      if(await api.updateOrder(id, patch) && v === 'delivered') toast('Done! Cash recorded.');
+      break;
+    }
+    case 'claim': if(await api.updateBar(id, {ownerId:S.myId})){ S.ownerBarId = id; toast('Nakamal is now yours to manage.'); } break;
+    case 'edit-bar': openEdit(id); break;
+    case 'pick': {
+      const r = el.getBoundingClientRect();
+      S.pick = {x:Math.round(((e.clientX - r.left) / r.width) * 1000) / 10, y:Math.round(((e.clientY - r.top) / r.height) * 620) / 10};
+      $('#pickWrap').innerHTML = mapSVG([], {picker:true, pick:S.pick});
+      break;
+    }
+    case 'add-item': S.editMenu.push({name:'', price:0}); $('#menuEdit').innerHTML = menuEditHTML(); break;
+    case 'rm-item': S.editMenu.splice(+el.dataset.i, 1); $('#menuEdit').innerHTML = menuEditHTML(); break;
+    case 'save-bar': {
+      const name = $('#e-name').value.trim();
+      if(!name){ $('#e-name').focus(); return toast('Give your nakamal a name.'); }
+      if(!S.pick) return toast('Tap the map to place your pin.');
+      const menu = S.editMenu.filter(m => (m.name || '').trim() && +m.price > 0).map(m => ({name:m.name.trim().slice(0, 40), price:Math.round(+m.price)}));
+      const fields = {name:name.slice(0, 50), landmark:$('#e-land').value.trim().slice(0, 120), hours:$('#e-hours').value.trim().slice(0, 40),
+        phone:$('#e-phone').value.trim().slice(0, 30), statusNote:$('#e-note').value.trim().slice(0, 80), x:S.pick.x, y:S.pick.y,
+        menu, delivers:$('#e-del').checked, deliveryFee:Math.max(0, Math.round(+$('#e-fee').value || 0))};
+      el.disabled = true;
+      let ok;
+      if(id) ok = await api.updateBar(id, fields);
+      else { const nid = newId('bar-'); ok = await api.setBar(nid, {...fields, status:'available', ownerId:S.myId, updatedAt:Date.now()}); if(ok) S.ownerBarId = nid; }
+      el.disabled = false;
+      if(ok){ closeSheet(); S.otab = 'status'; render(); toast(id ? 'Saved.' : 'Your nakamal is on the map!'); }
+      break;
+    }
+    case 'delete-bar': {
+      if(!S.confirmDel){ S.confirmDel = true; el.textContent = 'Tap again to remove for good'; return; }
+      if(await api.deleteBar(id)){ closeSheet(); toast('Nakamal removed.'); }
+      break;
+    }
+  }
+});
+
+setInterval(() => { if(S.loaded && !S.sheet) render(); }, 60000);
+init();
+</script>
+</body>
+</html>

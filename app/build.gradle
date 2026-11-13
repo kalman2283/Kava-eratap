@@ -1,0 +1,50 @@
+plugins {
+    id 'com.android.application'
+}
+
+// GitHub Actions sets GITHUB_RUN_NUMBER, so every build gets a higher version
+// and installs over the previous one as an update.
+def buildNumber = Integer.parseInt(System.getenv("GITHUB_RUN_NUMBER") ?: "1")
+
+android {
+    namespace 'vu.eratap.kava'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "vu.eratap.kava"
+        minSdk 24          // Android 7.0 and newer
+        targetSdk 35
+        versionCode buildNumber
+        versionName "1.0." + buildNumber
+    }
+
+    signingConfigs {
+        // One fixed key so every new APK installs as an update over the old one.
+        // Replace with a private key before publishing on Google Play (see README).
+        shared {
+            storeFile file('kava-shared.keystore')
+            storePassword 'android'
+            keyAlias 'kava'
+            keyPassword 'android'
+        }
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.shared
+        }
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.shared
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'androidx.webkit:webkit:1.11.0'
+}
