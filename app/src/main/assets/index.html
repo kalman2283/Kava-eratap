@@ -259,7 +259,7 @@ function startFirebase(cfg){
   const timer = setTimeout(() => { if(!S.loaded || S.stale !== false){ S.loaded = true; S.stale = true; render(); } }, 10000);
   firebase.auth().onAuthStateChanged(u => {
     if(!u){
-      firebase.auth().signInAnonymously().catch(() => { clearTimeout(timer); S.loaded = true; S.authError = true; render(); });
+      signIn(timer);
       return;
     }
     S.authError = false;
@@ -267,6 +267,24 @@ function startFirebase(cfg){
     S.myId = u.uid;
     subscribeFs(timer);
   });
+}
+
+function signIn(timer){
+  firebase.auth().signInAnonymously().catch(e => {
+    if(timer) clearTimeout(timer);
+    S.loaded = true; S.authError = (e && e.code) || 'unknown'; render();
+  });
+}
+function authHelp(code){
+  if(code === 'auth/operation-not-allowed' || code === 'auth/admin-restricted-operation')
+    return 'Anonymous sign-in is turned off. In Firebase: Authentication → Sign-in method → Anonymous → Enable.';
+  if(code === 'auth/configuration-not-found')
+    return 'Authentication is not set up yet. In Firebase: Authentication → Get started, then enable Anonymous.';
+  if(code === 'auth/network-request-failed')
+    return 'No internet connection reached Firebase. Check data or Wi-Fi.';
+  if(code === 'auth/api-key-not-valid' || code === 'auth/invalid-api-key' || code === 'auth/api-key-not-valid.-please-pass-a-valid-api-key.')
+    return 'The Firebase API key is not accepted. Check the key restrictions in Google Cloud.';
+  return 'Check the internet connection and that Anonymous sign-in is enabled in Firebase.';
 }
 
 function subscribeFs(timer){
@@ -353,7 +371,7 @@ function banners(){
   if(S.mode === 'local') h += `<div class="banner">${S.fbError
     ? 'No internet, so the app could not connect. Showing demo nakamal. Connect to the internet and reopen the app.'
     : 'Demo mode: this app is not connected to the shared database yet, so changes stay on this phone.'}</div>`;
-  if(S.mode === 'live' && S.authError) h += `<div class="banner">Could not sign in. Check the internet connection and reopen the app.</div>`;
+  if(S.mode === 'live' && S.authError) h += `<div class="banner"><b>Could not sign in.</b> ${esc(authHelp(S.authError))}<br><span style="opacity:.7;font-size:12px">Code: ${esc(S.authError)}</span><div style="margin-top:8px"><button class="btn small" data-act="retry-auth">Try again</button></div></div>`;
   if(S.mode === 'live' && !navigator.onLine) h += `<div class="banner">No internet. You're seeing the last saved status. New updates will send when you're back online.</div>`;
   else if(S.stale) h += `<div class="banner">Can't reach the latest updates yet. Status shown may be old.</div>`;
   return h;
@@ -651,8 +669,12 @@ document.addEventListener('click', async e => {
       if(await api.updateOrder(id, patch) && v === 'delivered') toast('Done! Cash recorded.');
       break;
     }
-    case 'claim': if(await api.updateBar(id, {ownerId:S.myId})){ S.ownerBarId = id; toast('Nakamal is now yours to manage.'); } break;
-    case 'edit-bar': openEdit(id); break;
+    case 'claim': if(S.mode === 'live' && !S.myId){ toast('Not signed in yet. Tap “Try again” at the top first.'); break; } if(await api.updateBar(id, {ownerId:S.myId})){ S.ownerBarId = id; toast('Nakamal is now yours to manage.'); } break;
+    case 'edit-bar':
+      if(S.mode === 'live' && !S.myId) return toast('Not signed in yet. Tap “Try again” at the top first.');
+      openEdit(id); break;
+    case 'retry-auth':
+      S.authError = false; render(); toast('Signing in…'); signIn(null); break;
     case 'pick': {
       const r = el.getBoundingClientRect();
       S.pick = {x:Math.round(((e.clientX - r.left) / r.width) * 1000) / 10, y:Math.round(((e.clientY - r.top) / r.height) * 620) / 10};
