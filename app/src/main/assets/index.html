@@ -27,6 +27,9 @@ header{position:sticky;top:0;z-index:20;background:var(--kava-d);color:#f7efdf;p
 .brand svg{flex:none}
 .brand h1{font-size:22px;font-weight:800;line-height:1}
 .brand small{display:block;font-size:12px;opacity:.75;margin-top:3px;font-family:"DM Sans"}
+.keybtn{margin-left:8px;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.14);font-size:16px;display:grid;place-items:center;flex:none}
+.linkbtn{color:var(--leaf);font-weight:700;text-decoration:underline;padding:4px}
+.acct{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;color:var(--muted);margin-bottom:12px}
 .mode{margin-left:auto;font-size:11px;padding:3px 8px;border-radius:99px;background:rgba(255,255,255,.12)}
 .seg{display:flex;background:rgba(0,0,0,.25);border-radius:12px;padding:3px;margin-top:12px}
 .seg button{flex:1;padding:8px 6px;border-radius:9px;font-weight:700;font-size:14px;color:#e9dcc4}
@@ -147,8 +150,9 @@ nav .badge{position:absolute;top:2px;right:calc(50% - 26px);background:var(--fin
       <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="17" fill="#f7efdf"/><path d="M7 15h20c0 6-4.5 10-10 10S7 21 7 15z" fill="#8b6d3f"/><path d="M8.5 15h17" stroke="#4a3b24" stroke-width="2" stroke-linecap="round"/><path d="M14 9c1-1.5 0-3 1-4.5M19 9c1-1.5 0-3 1-4.5" stroke="#8b6d3f" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
       <div><h1>Kava Eratap</h1><small>Nakamal blong Eratap vilej</small></div>
       <span class="mode" id="mode"></span>
+      <button class="keybtn" id="keyBtn" data-act="owner-login" aria-label="Nakamal owner sign in" title="Nakamal owner sign in">🔑</button>
     </div>
-    <div class="seg" role="tablist">
+    <div class="seg" id="seg" role="tablist">
       <button data-act="role" data-v="customer" id="r-customer">🙋 Kastoma</button>
       <button data-act="role" data-v="owner" id="r-owner">🏠 Ona blong nakamal</button>
     </div>
@@ -178,6 +182,9 @@ const S = {role:'customer', ctab:'bars', otab:'status', filter:'all', bars:[], o
            sheet:null, cart:{}, pick:null, editMenu:[], confirmDel:false};
 
 const $ = s => document.querySelector(s);
+// Owner tools need a signed-in owner account (email + password). Demo mode has no accounts.
+const canOwn = () => S.mode === 'local' || !!S.ownerEmail;
+const role = () => canOwn() && S.role === 'owner' ? 'owner' : 'customer';
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const vt = n => Math.round(Number(n) || 0).toLocaleString('en-US') + ' VT';
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -258,12 +265,10 @@ function startFirebase(cfg){
   S.fs = fs; S.mode = 'live';
   const timer = setTimeout(() => { if(!S.loaded || S.stale !== false){ S.loaded = true; S.stale = true; render(); } }, 10000);
   firebase.auth().onAuthStateChanged(u => {
-    if(!u){
-      signIn(timer);
-      return;
-    }
+    if(!u){ S.ownerEmail = null; signIn(timer); return; }
     S.authError = false;
-    if(S.myId === u.uid) return;
+    S.ownerEmail = u.email || null;      // anonymous customers have no email
+    if(S.myId === u.uid){ render(); return; }
     S.myId = u.uid;
     subscribeFs(timer);
   });
@@ -321,8 +326,8 @@ async function init(){
 // Android back button: close a panel, then go back to the first tab, then exit.
 window.kavaBack = function(){
   if(S.sheet){ closeSheet(); return true; }
-  if(S.role === 'customer' && S.ctab !== 'bars'){ S.ctab = 'bars'; render(); return true; }
-  if(S.role === 'owner' && S.otab !== 'status'){ S.otab = 'status'; render(); return true; }
+  if(role() === 'customer' && S.ctab !== 'bars'){ S.ctab = 'bars'; render(); return true; }
+  if(role() === 'owner' && S.otab !== 'status'){ S.otab = 'status'; render(); return true; }
   return false;
 };
 window.addEventListener('online', () => render());
@@ -359,10 +364,12 @@ function mapSVG(bars, opt = {}){
 
 /* ---------- render ---------- */
 function render(){
-  $('#r-customer').classList.toggle('on', S.role === 'customer');
-  $('#r-owner').classList.toggle('on', S.role === 'owner');
+  $('#r-customer').classList.toggle('on', role() === 'customer');
+  $('#r-owner').classList.toggle('on', role() === 'owner');
+  $('#seg').style.display = canOwn() ? 'flex' : 'none';
+  $('#keyBtn').style.display = canOwn() || S.mode !== 'live' ? 'none' : 'grid';
   $('#mode').textContent = S.mode === 'live' ? (navigator.onLine ? '● Live' : '○ Offline') : S.mode === 'local' ? 'Demo' : '…';
-  $('#view').innerHTML = S.role === 'customer' ? customerView() : ownerView();
+  $('#view').innerHTML = role() === 'customer' ? customerView() : ownerView();
   $('#tabs').innerHTML = tabsHTML();
 }
 
@@ -383,7 +390,7 @@ function tabsHTML(){
   const incoming = S.orders.filter(o => myBarIds.includes(o.barId) && o.status === 'new').length;
   const t = (act, v, cur, icon, label, badge) =>
     `<button data-act="${act}" data-v="${v}" class="${cur === v ? 'on' : ''}"><span style="font-size:19px">${icon}</span>${label}${badge ? `<span class="badge">${badge}</span>` : ''}</button>`;
-  return S.role === 'customer'
+  return role() === 'customer'
     ? t('ctab','bars',S.ctab,'🥥','Nakamal') + t('ctab','orders',S.ctab,'🛵','My orders',mine)
     : t('otab','status',S.otab,'📣','My nakamal') + t('otab','orders',S.otab,'🧾','Orders',incoming);
 }
@@ -405,9 +412,12 @@ function customerView(){
   h += `<div class="card mapcard">${mapSVG(bars)}
     <div class="maphead"><div class="legend">${['available','low','finished','closed'].map(k => `<span><i class="dot" style="background:${STATUS[k].color}"></i>${STATUS[k].short}</span>`).join('')}</div></div></div>`;
   h += `<div class="chips">${chip('all', `All (${S.bars.length})`)}${chip('open', `Kava i stap (${openCount})`)}${chip('deliver', '🛵 Delivers now')}</div>`;
-  if(!S.bars.length) return h + `<div class="card empty"><h3>No nakamal yet</h3>Bar owners can add their nakamal from the <b>Ona blong nakamal</b> tab.</div>`;
+  if(!S.bars.length) return h + `<div class="card empty"><h3>No nakamal yet</h3>Nakamal owners can sign in and add their kava bar.</div>` + ownerLink();
   if(!bars.length) return h + `<div class="card empty"><h3>Nothing here right now</h3>No nakamal matches this filter. Try “All”.</div>`;
-  return h + bars.map(barCard).join('');
+  return h + bars.map(barCard).join('') + ownerLink();
+}
+function ownerLink(){
+  return canOwn() || S.mode !== 'live' ? '' : `<p class="note" style="text-align:center;margin:18px 0 6px">Nakamal owner? <button class="linkbtn" data-act="owner-login">Sign in to manage your nakamal</button></p>`;
 }
 
 function barCard(b){
@@ -463,6 +473,7 @@ function ownerView(){
   if(!S.loaded) return '<div class="skeleton"></div><div class="skeleton"></div>';
   const mine = myBars();
   let h = banners();
+  if(S.ownerEmail) h += `<div class="acct"><span>Signed in as <b>${esc(S.ownerEmail)}</b></span><button class="btn small ghost" data-act="sign-out">Sign out</button></div>`;
   if(!mine.length){
     const unclaimed = S.bars.filter(b => !b.ownerId);
     h += `<div class="card empty"><h3>Register your nakamal</h3>Add your kava bar so customers in Eratap can see when kava is ready and order delivery.<br><br>
@@ -609,6 +620,42 @@ function menuEditHTML(){
   return S.editMenu.map((m, i) => `<div class="editrow"><input class="n" data-mi="${i}" data-k="name" value="${esc(m.name)}" placeholder="Item"><input class="p" data-mi="${i}" data-k="price" type="number" inputmode="numeric" min="0" step="10" value="${+m.price || ''}" placeholder="VT"><button class="x" data-act="rm-item" data-i="${i}" aria-label="Remove">✕</button></div>`).join('');
 }
 
+/* ---------- owner accounts ---------- */
+function openAuth(mode, email){
+  S.authMode = mode;
+  const up = mode === 'signup';
+  openSheet(`
+    <div class="sheethead"><h2>${up ? 'Create owner account' : 'Nakamal owner sign in'}</h2><button class="x" data-act="close-sheet" aria-label="Close">✕</button></div>
+    <p class="note" style="margin-top:-4px">For kava bar owners only. Customers don't need an account.</p>
+    <div class="chips"><button class="chip ${up ? '' : 'on'}" data-act="auth-mode" data-v="signin">Sign in</button><button class="chip ${up ? 'on' : ''}" data-act="auth-mode" data-v="signup">Create account</button></div>
+    <div class="field"><label for="a-email">Email</label><input id="a-email" type="email" inputmode="email" autocomplete="email" value="${esc(email || '')}"></div>
+    <div class="field"><label for="a-pass">Password</label><input id="a-pass" type="password" autocomplete="${up ? 'new-password' : 'current-password'}" placeholder="${up ? 'At least 6 characters' : ''}"></div>
+    <div id="authErr" class="note" style="color:var(--fin);min-height:20px;margin-bottom:6px"></div>
+    <button class="btn block" data-act="auth-submit">${up ? 'Create account' : 'Sign in'}</button>
+    ${up ? '' : '<div style="text-align:center;margin-top:12px"><button class="linkbtn" data-act="auth-reset">Forgot password?</button></div>'}
+  `, 'auth');
+}
+function authMsg(e){
+  const c = (e && e.code) || '';
+  if(c === 'auth/invalid-email') return 'That email address doesn’t look right.';
+  if(c === 'auth/missing-password') return 'Enter your password.';
+  if(c === 'auth/weak-password') return 'Password must be at least 6 characters.';
+  if(c === 'auth/email-already-in-use' || c === 'auth/credential-already-in-use') return 'This email already has an account. Tap “Sign in” instead.';
+  if(c === 'auth/invalid-credential' || c === 'auth/wrong-password' || c === 'auth/user-not-found' || c === 'auth/invalid-login-credentials') return 'Wrong email or password.';
+  if(c === 'auth/operation-not-allowed') return 'Email/Password sign-in is turned off. In Firebase: Authentication → Sign-in method → Email/Password → Enable.';
+  if(c === 'auth/network-request-failed') return 'No internet connection. Try again.';
+  if(c === 'auth/too-many-requests') return 'Too many tries. Wait a few minutes and try again.';
+  return 'Could not sign in (' + (c || 'error') + ').';
+}
+function afterOwnerLogin(){
+  const u = firebase.auth().currentUser; if(!u) return;
+  S.ownerEmail = u.email || null;
+  if(S.myId !== u.uid){ S.myId = u.uid; subscribeFs(); }
+  S.role = 'owner'; store('role', 'owner'); S.otab = 'status';
+  closeSheet(); render(); window.scrollTo(0, 0);
+  toast('Signed in as ' + S.ownerEmail);
+}
+
 /* ---------- actions ---------- */
 document.addEventListener('input', e => {
   const mi = e.target.dataset && e.target.dataset.mi;
@@ -619,7 +666,46 @@ document.addEventListener('click', async e => {
   const el = e.target.closest('[data-act]'); if(!el) return;
   const act = el.dataset.act, id = el.dataset.id, v = el.dataset.v;
   switch(act){
-    case 'role': S.role = v; store('role', v); render(); window.scrollTo(0, 0); break;
+    case 'role':
+      if(v === 'owner' && !canOwn()){ openAuth('signin'); break; }
+      S.role = v; store('role', v); render(); window.scrollTo(0, 0); break;
+    case 'owner-login': openAuth('signin'); break;
+    case 'auth-mode': openAuth(v, ($('#a-email') || {}).value); break;
+    case 'auth-submit': {
+      const email = $('#a-email').value.trim(), pass = $('#a-pass').value, err = $('#authErr');
+      if(!email || !pass){ err.textContent = 'Enter your email and password.'; break; }
+      const auth = firebase.auth(); el.disabled = true; err.textContent = '';
+      try{
+        if(S.authMode === 'signup'){
+          const cur = auth.currentUser;
+          if(cur && cur.isAnonymous){
+            // Keep the same user ID, so a nakamal added on this phone stays theirs.
+            await cur.linkWithCredential(firebase.auth.EmailAuthProvider.credential(email, pass));
+            await cur.reload();
+          } else {
+            await auth.createUserWithEmailAndPassword(email, pass);
+          }
+        } else {
+          await auth.signInWithEmailAndPassword(email, pass);
+        }
+        await auth.currentUser.getIdToken(true);   // fresh token carries the email for the database rules
+        afterOwnerLogin();
+      }catch(e){ err.textContent = authMsg(e); }
+      el.disabled = false;
+      break;
+    }
+    case 'auth-reset': {
+      const email = $('#a-email').value.trim(), err = $('#authErr');
+      if(!email){ err.textContent = 'Type your email above, then tap “Forgot password?” again.'; break; }
+      try{ await firebase.auth().sendPasswordResetEmail(email); err.style.color = 'var(--leaf)'; err.textContent = 'Password reset link sent to ' + email + '.'; }
+      catch(e){ err.textContent = authMsg(e); }
+      break;
+    }
+    case 'sign-out':
+      S.role = 'customer'; store('role', 'customer'); S.ctab = 'bars';
+      try{ await firebase.auth().signOut(); }catch(e){}
+      render(); toast('Signed out.');
+      break;
     case 'ctab': S.ctab = v; render(); window.scrollTo(0, 0); break;
     case 'otab': S.otab = v; render(); window.scrollTo(0, 0); break;
     case 'filter': S.filter = v; render(); break;

@@ -9,8 +9,8 @@ The app is a native Android shell (`MainActivity.java`, a WebView) around `app/s
 ## 1. Create the Firebase database (one time, about 10 minutes, free)
 
 1. Go to <https://console.firebase.google.com> → **Add project** → name it e.g. `kava-eratap`. You can turn Analytics off.
-2. **Build → Authentication → Get started → Sign-in method → Anonymous → Enable.**
-   Users don't need a password. Each phone gets its own private ID automatically.
+2. **Authentication → Get started → Sign-in method:** enable **Anonymous** (customers, no password needed)
+   and **Email/Password** (nakamal owners sign in with it).
 3. **Build → Firestore Database → Create database.** Pick a location near Vanuatu (e.g. `australia-southeast1`) and start in **production mode**.
 4. Firestore → **Rules** tab → paste in everything from `firestore.rules` → **Publish**.
 5. **Project settings (⚙️) → Your apps → Web (`</>`)** → register an app → copy the `firebaseConfig` object.
@@ -56,12 +56,13 @@ Command line: `./gradlew assembleRelease` → `app/build/outputs/apk/release/app
 3. Open **Kava Eratap**. It needs Android 7.0 or newer.
 
 ## How owners get started
-- Open the app → **Ona blong nakamal** → **Add my nakamal** → enter name, map pin, prices in VT and delivery fee.
+- Customers never see the owner tools. Owners tap the **🔑** button in the header (or "Nakamal owner? Sign in" under the list) and **Create account** with email + password once, then **Sign in** on any phone.
+- Then **Ona blong nakamal** → **Add my nakamal** → enter name, map pin, prices in VT and delivery fee.
 - Tap a status button whenever kava changes. Customers see it within seconds.
 - New orders appear under **Orders**: Accept → On the way → Delivered (cash received).
 
 ## Things to know
-- **Owner identity is tied to the phone.** If an owner uninstalls the app or clears its data, they get a new ID and lose control of their nakamal. To fix it, edit that nakamal's `ownerId` in Firebase console → Firestore → `bars` and set it to the new phone's ID. (A phone-number sign-in can be added later to avoid this.)
+- **Owner accounts.** Anyone can create an owner account, but they can only change the nakamal they added themselves. To remove a fake nakamal, delete it in Firebase console → Firestore → `bars`; to block an account, disable it under Authentication → Users.
 - **Signing key.** `app/kava-shared.keystore` (password `android`) signs every build so updates install over each other. It's in the repo, so it's fine for village sideloading, but **make a private key before publishing on Google Play** and keep it out of git.
 - **Google Play.** To publish there, build an `.aab` (`./gradlew bundleRelease`) with your private key and register a Play developer account (one-time US$25).
 - **Notifications.** Owners see new orders when the app is open (a red badge on Orders). Background push alerts would need Firebase Cloud Messaging, a possible next step.
